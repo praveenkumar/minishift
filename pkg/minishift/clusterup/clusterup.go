@@ -20,9 +20,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+
 	"github.com/blang/semver"
 	"github.com/docker/machine/libmachine/host"
 	"github.com/docker/machine/libmachine/provision"
+
+	"os"
+	"strings"
+	"time"
 
 	"github.com/minishift/minishift/pkg/minikube/constants"
 	"github.com/minishift/minishift/pkg/minikube/kubeconfig"
@@ -31,9 +36,6 @@ import (
 	"github.com/minishift/minishift/pkg/minishift/oc"
 	"github.com/minishift/minishift/pkg/util"
 	"github.com/minishift/minishift/pkg/version"
-	"os"
-	"strings"
-	"time"
 )
 
 const (
@@ -75,7 +77,8 @@ func ClusterUp(config *ClusterUpConfig, clusterUpParams map[string]string, runne
 
 // PostClusterUp runs the Minishift specific provisioning after 'cluster up' has run
 func PostClusterUp(clusterUpConfig *ClusterUpConfig, sshCommander provision.SSHCommander, addOnManager *manager.AddOnManager) error {
-	err := kubeconfig.CacheSystemAdminEntries(clusterUpConfig.KubeConfigPath, getConfigClusterName(clusterUpConfig.Ip, clusterUpConfig.Port))
+	isOpenshift3_6 := util.VersionOrdinal(clusterUpConfig.OpenShiftVersion) >= util.VersionOrdinal("v3.6.0")
+	err := kubeconfig.CacheSystemAdminEntries(clusterUpConfig.KubeConfigPath, getConfigClusterName(clusterUpConfig.Ip, clusterUpConfig.Port), isOpenshift3_6)
 	if err != nil {
 		return err
 	}
