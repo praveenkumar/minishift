@@ -36,7 +36,7 @@ func TestCacheSystemAdminEntries(t *testing.T) {
 	defer tearDown(t)
 	testSystemConfig := SystemKubeConfig{}
 
-	CacheSystemAdminEntries(testSystemConfigPath, "10-168-99-100:8443", false)
+	CacheSystemAdminEntries(testSystemConfigPath, "10-168-99-100:8443", "system:admin/10-168-99-100:8443")
 
 	// read test kube config
 	data, _ := ioutil.ReadFile(testKubeConfigPath)
