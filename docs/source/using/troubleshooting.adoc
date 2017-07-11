@@ -12,11 +12,11 @@ toc::[]
 This section contains solutions to common problems that you might encounter while using Minishift.
 
 [[minshift-update-failed-due-to-permission-denied]]
-== Permission cause update to fail
+== Permission denied error when updating Minishift
 
-Depending on your operating system if you have minishift binary installed in location where current user does not have write permission then `minishift update` will fail.
-
-Workaround: When updating minishift use `sudo minishift update` (Linux/Unix).
+When updating Minishift using `minishift update`, the update process needs write permissions for the Minishift binary as well as the directory in which it is located.
+Without these permisions `minishift update` will fail.
+This is for example an issue when installing Minishift as root.
 
 ----
 $ which minishift
@@ -29,7 +29,9 @@ Downloading https://github.com/minishift/minishift/releases/download/v1.2.0/mini
  3.68 MiB / 3.68 MiB [===========================================================================================================================================] 100.00% 0s
  65 B / 65 B [===================================================================================================================================================] 100.00% 0s
 Update failed: open /usr/bin/.minishift.new: permission denied
----- 
+----
+
+Workaround: When updating minishift use `sudo minishift update` (Linux/Unix).
 
 [[special-characters-passwords]]
 == Special characters cause passwords to fail
