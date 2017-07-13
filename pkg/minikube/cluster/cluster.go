@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -222,10 +223,15 @@ func createDriverOptions(driver drivers.Driver, explicitOptions map[string]inter
 	return checkFlags, nil
 }
 
+// CacheMinikubeISOFromURL download minishift ISO from a given URI.
+// It also checks sha256sum if present and then put ISO to cached directory.
 func (m *MachineConfig) CacheMinikubeISOFromURL() error {
 	fmt.Println(fmt.Sprintf("Downloading ISO '%s'", m.MinikubeISO))
+	tmpISOFile, err := ioutil.TempFile(filepath.Join(constants.Minipath, "cache", "iso"), "minishift.part")
+	if err != nil {
+		return err
+	}
 
-	// store the iso inside the MINISHIFT_HOME dir
 	response, err := http.Get(m.MinikubeISO)
 	if err != nil {
 		return err
@@ -248,12 +254,34 @@ func (m *MachineConfig) CacheMinikubeISOFromURL() error {
 		}()
 	}
 
+	if _, err = io.Copy(tmpISOFile, iso); err != nil {
+		return err
+	}
+
+	if err := tmpISOFile.Sync(); err != nil {
+		return err
+	}
+
+	checksumURL := fmt.Sprintf(m.MinikubeISO + ".sha256")
+	checksumResp, err := http.Get(checksumURL)
+	defer checksumResp.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	if checksumResp.StatusCode == 200 {
+		if err := util.CheckSha256Sum(tmpISOFile, checksumResp); err != nil {
+			return err
+		}
+	}
+
 	out, err := os.Create(m.GetISOCacheFilepath())
 	if err != nil {
 		return err
 	}
 	defer out.Close()
-	if _, err = io.Copy(out, iso); err != nil {
+
+	if err = os.Rename(tmpISOFile.Name(), out.Name()); err != nil {
 		return err
 	}
 	return nil

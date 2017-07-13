@@ -17,10 +17,18 @@ limitations under the License.
 package util
 
 import (
+	"bytes"
+	"crypto"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // Until endlessly loops the provided function until a message is received on the done channel.
@@ -151,4 +159,39 @@ func FriendlyDuration(d time.Duration) time.Duration {
 
 	d2 := (d / time.Nanosecond) * (time.Nanosecond)
 	return d2
+}
+
+// ChecSha256Sum takes a file handler and a http-response and match the sha256sum
+// and return error if not equal
+func CheckSha256Sum(source *os.File, checksumResp *http.Response) error {
+	if !crypto.SHA256.Available() {
+		return errors.New("Requested hash function not available")
+	}
+
+	srcTmpFile, _ := os.Open(source.Name())
+	defer srcTmpFile.Close()
+	hash := crypto.SHA256.New()
+	if _, err := io.Copy(hash, srcTmpFile); err != nil {
+		return err
+	}
+	archiveChecksum := hash.Sum([]byte{})
+
+	checksum := checksumResp.Body
+
+	// Verify checksum
+	b, err := ioutil.ReadAll(checksum)
+	if err != nil {
+		return err
+	}
+
+	downloadedChecksum, err := hex.DecodeString(strings.TrimSpace(string(b)))
+	if err != nil {
+		return err
+	}
+
+	// Compare checksums of downloaded checksum and archive file
+	if !bytes.Equal(archiveChecksum, downloadedChecksum) {
+		return errors.New(fmt.Sprintf("Updated file has wrong checksum. Expected: %x, got: %x", archiveChecksum, downloadedChecksum))
+	}
+	return nil
 }
