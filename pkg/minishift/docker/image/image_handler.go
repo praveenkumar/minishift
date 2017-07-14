@@ -232,7 +232,7 @@ func (handler *DockerImageHandler) exportImage(image string, cacheDir string, w 
 
 	errorCh := make(chan error)
 	go func() {
-		file, err := os.Create(imageCacheFile + ".tmp")
+		file, err := os.Create(imageCacheFile + ".part")
 		if err != nil {
 			errorCh <- errors.New(fmt.Sprintf("Unable to create temporary image file: %v", err))
 		}
