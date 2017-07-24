@@ -25,6 +25,7 @@ import (
 	"github.com/docker/machine/libmachine/drivers/plugin"
 	"github.com/docker/machine/libmachine/drivers/plugin/localbinary"
 	"github.com/golang/glog"
+	"github.com/minishift/minishift/pkg/minikube/machine/drivers/none"
 )
 
 // StartDriver starts the desired machine driver if necessary.
@@ -38,6 +39,8 @@ func StartDriver() {
 			plugin.RegisterDriver(vmwarefusion.NewDriver("", ""))
 		case "hyperv":
 			plugin.RegisterDriver(hyperv.NewDriver("", ""))
+		case "none":
+			plugin.RegisterDriver(none.NewDriver("", ""))
 		default:
 			glog.Exitf("Unsupported driver: %s\n", driverName)
 		}

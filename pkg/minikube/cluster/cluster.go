@@ -41,6 +41,7 @@ import (
 	"github.com/docker/machine/libmachine/state"
 	"github.com/golang/glog"
 	"github.com/minishift/minishift/pkg/minikube/constants"
+	"github.com/minishift/minishift/pkg/minikube/machine/drivers/none"
 	"github.com/minishift/minishift/pkg/minishift/registration"
 	minishiftUtil "github.com/minishift/minishift/pkg/minishift/util"
 	"github.com/minishift/minishift/pkg/util"
@@ -479,8 +480,10 @@ func getDriverOptions(config MachineConfig) (drivers.DriverOptions, error) {
 			"hyperv-cpu-count":       config.CPUs,
 			"hyperv-disk-size":       config.DiskSize,
 		}
-
 		return createDriverOptions(d, machineConfigOptions)
+	case "none":
+		d := none.NewDriver(constants.MachineName, constants.Minipath)
+		return createDriverOptions(d, nil)
 	default:
 		atexit.ExitWithMessage(1, fmt.Sprintf("Unsupported driver: %s", config.VMDriver))
 	}
