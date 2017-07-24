@@ -32,6 +32,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"github.com/docker/machine/drivers/hyperv"
 	"github.com/docker/machine/drivers/virtualbox"
 	"github.com/docker/machine/libmachine"
