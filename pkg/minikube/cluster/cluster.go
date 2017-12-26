@@ -458,6 +458,29 @@ func getDriverOptions(config MachineConfig) (drivers.DriverOptions, error) {
 		}
 
 		return createDriverOptions(h.Driver, machineConfigOptions)
+	case "kvm2":
+		if minishiftOs.CurrentOS() != minishiftOs.LINUX {
+			atexit.ExitWithMessage(1, "kvm2 driver is only supported on GNU/Linux hosts.")
+		}
+
+		api := libmachine.NewClient(constants.MachineName, constants.Minipath)
+		h, err := api.NewHost("kvm2", []byte("{}"))
+		if err != nil {
+			return nil, err
+		}
+
+		machineConfigOptions := map[string]interface{}{
+			"kvm-boot2docker-url": config.GetISOFileURI(),
+			"kvm-memory":          config.Memory,
+			"kvm-cpu-count":       config.CPUs,
+			"kvm-disk-size":       config.DiskSize,
+			"kvm-disk-path":       filepath.Join(constants.Minipath, "machines", constants.MachineName, fmt.Sprintf("%s.rawdisk", constants.MachineName)),
+			"kvm-network":         "default",
+			"kvm-cache-mode":      "default",
+			"kvm-io-mode":         "threads",
+		}
+
+		return createDriverOptions(h.Driver, machineConfigOptions)
 	case "hyperv":
 		if minishiftOs.CurrentOS() != minishiftOs.WINDOWS {
 			atexit.ExitWithMessage(1, "hyperv driver is only supported on Windows hosts.")

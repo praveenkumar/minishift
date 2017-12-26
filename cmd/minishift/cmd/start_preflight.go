@@ -90,6 +90,31 @@ func preflightChecksBeforeStartingHost() {
 			"Checking if Libvirt default network is active",
 			true, configCmd.WarnCheckKVMDriver.Name,
 			driverErrorMessage)
+	case "kvm2":
+		preflightCheckSucceedsOrFails(
+			configCmd.SkipCheckKVMDriver.Name,
+			checkKvm2Driver,
+			"Checking if KVM driver is installed",
+			false, configCmd.WarnCheckKVMDriver.Name,
+			driverErrorMessage)
+		preflightCheckSucceedsOrFails(
+			configCmd.SkipCheckKVMDriver.Name,
+			checkLibvirtInstalled,
+			"Checking if Libvirt is installed",
+			false, configCmd.WarnCheckKVMDriver.Name,
+			driverErrorMessage)
+		preflightCheckSucceedsOrFails(
+			configCmd.SkipCheckKVMDriver.Name,
+			checkLibvirtDefaultNetworkExists,
+			"Checking if Libvirt default network is present",
+			false, configCmd.WarnCheckKVMDriver.Name,
+			driverErrorMessage)
+		preflightCheckSucceedsOrFails(
+			configCmd.SkipCheckKVMDriver.Name,
+			checkLibvirtDefaultNetworkActive,
+			"Checking if Libvirt default network is active",
+			true, configCmd.WarnCheckKVMDriver.Name,
+			driverErrorMessage)
 	case "hyperv":
 		preflightCheckSucceedsOrFails(
 			configCmd.SkipCheckHyperVDriver.Name,
@@ -253,6 +278,29 @@ func checkXhyveDriver() bool {
 // checkKvmDriver returns true if KVM driver is available on path
 func checkKvmDriver() bool {
 	path, err := exec.LookPath("docker-machine-driver-kvm")
+	if err != nil {
+		return false
+	}
+	fi, _ := os.Stat(path)
+	// follow symlinks
+	if fi.Mode()&os.ModeSymlink != 0 {
+		path, err = os.Readlink(path)
+		if err != nil {
+			return false
+		}
+	}
+	fmt.Println(fmt.Sprintf("\n   Driver is available at %s ... ", path))
+
+	fmt.Printf("   Checking driver binary is executable ... ")
+	if fi.Mode()&0011 == 0 {
+		return false
+	}
+	return true
+}
+
+// checkKvmDriver returns true if KVM driver is available on path
+func checkKvm2Driver() bool {
+	path, err := exec.LookPath("docker-machine-driver-kvm2")
 	if err != nil {
 		return false
 	}
